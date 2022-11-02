@@ -20,7 +20,7 @@ def get_db():
         db.close()
 
 
-@app.post("/blog", status_code= 201)
+@app.post("/blog", status_code= 201) #status_code define o tipo de status que queremos ao executar
 def create(request: schemas.Blog, db: Session = Depends(get_db)):
     new_blog = models.Blog(title=request.title, body=request.body)
     db.add(new_blog)
