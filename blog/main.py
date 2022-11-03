@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import FastAPI, Depends, status, Response, HTTPException
 import uvicorn
 from config.database import SessionLocal
@@ -5,6 +6,7 @@ from domain.account import schemas
 from domain.account import models
 from config.database import engine, SessionLocal
 from sqlalchemy.orm import Session
+from domain.account.hashing import Hash
 
 app = FastAPI()
 
@@ -28,13 +30,13 @@ def create(request: schemas.Blog, db: Session = Depends(get_db)):
     return new_blog
 
 
-@app.get("/blog") #pegando todos os dados 
+@app.get("/blog", response_model=list[schemas.Showblog]) #pegando todos os dados/ USANDO O modelo de resposta do schema para sair em formato lista
 def all(db: Session = Depends(get_db)):
     blogs = db.query(models.Blog).all()
     return blogs
 
 
-@app.get("/blog/{id}", status_code=200) #pegando um determinado dados pela id
+@app.get("/blog/{id}", status_code=200, response_model=schemas.Showblog) #pegando um determinado dados pela id
 def show(id, response: Response, db: Session = Depends(get_db)):
     blog = db.query(models.blog).filter(models.Blog.id == id).first # filter funciona como um "where" do sql / first significa que queremos apenas o primeiro
     if not blog:
@@ -67,6 +69,16 @@ def update(id, request: schemas.Blog, db: Session = Depends(get_db)):
     return "updated"
 
 
+
+
+@app.post("/user")
+def create_user(request: schemas.User, db: Session = Depends(get_db)):
+    
+    new_user = models.User(name=request.name, email=request.email, password=Hash.bcrypt(request.password))
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
 
 
 
